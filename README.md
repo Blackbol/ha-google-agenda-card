@@ -76,6 +76,7 @@ Une carte Lovelace personnalisée pour **Home Assistant** offrant l'interface co
 
 ```yaml
 type: custom:google-agenda-card
+language: auto            # 'auto' (suit la langue HA), 'en' ou 'fr'
 theme_mode: auto          # 'auto', 'dark' ou 'light'
 centered_month: true      # Active la vue du mois centrée sur la semaine actuelle
 fit_screen: true          # Ajuste la hauteur de la carte à l'écran
@@ -132,6 +133,7 @@ calendars:
 | :--- | :--- | :--- | :--- |
 | `type` | `string` | **Requis** | `custom:google-agenda-card` |
 | `calendars` | `list` | `[]` | Liste des entités calendriers Home Assistant à afficher |
+| `language` | `string` | `auto` | Langue de l'interface : `auto` (suit le profil Home Assistant), `fr` (français) ou `en` (anglais) |
 | `theme_mode` | `string` | `auto` | Mode de couleur : `auto` (suit Home Assistant), `dark` ou `light` |
 | `centered_month` | `boolean` | `false` | Centre la vue mois pour que la semaine actuelle soit la 3ᵉ ligne (du milieu) |
 | `fit_screen` | `boolean` | `true` | Adapte la hauteur pour remplir la vue écran de l'iPad/tablette |

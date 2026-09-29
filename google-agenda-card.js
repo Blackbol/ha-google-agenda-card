@@ -29,16 +29,77 @@
     return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #8ab4f8; text-decoration: underline; word-break: break-all;">$1</a>');
   }
 
-  const MONTH_NAMES = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ];
-  const MONTH_SHORT = [
-    'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
-    'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'
-  ];
-  const DAY_NAMES_SHORT = ['LUN.', 'MAR.', 'MER.', 'JEU.', 'VEN.', 'SAM.', 'DIM.'];
-  const DAY_INITIALS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  const I18N = {
+    fr: {
+      months: [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      ],
+      monthsShort: [
+        'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+        'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'
+      ],
+      daysShort: ['LUN.', 'MAR.', 'MER.', 'JEU.', 'VEN.', 'SAM.', 'DIM.'],
+      dayInitials: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
+      today: "Aujourd'hui",
+      monthView: "Mois",
+      weekView: "Semaine",
+      mainMenu: "Menu principal",
+      prevPeriod: "Période précédente",
+      nextPeriod: "Période suivante",
+      prevMonth: "Mois précédent",
+      nextMonth: "Mois suivant",
+      classicMonthView: "Vue mois classique",
+      centerMonthView: "Centrer la vue du mois sur la semaine actuelle",
+      switchToLight: "Passer en mode clair",
+      switchToDark: "Passer en mode sombre",
+      enterFullscreen: "Passer en plein écran",
+      exitFullscreen: "Quitter le plein écran",
+      allDay: "Toute la journée",
+      allDayHeader: "Journée",
+      moreEvents: "en plus",
+      untitled: "Sans titre",
+      defaultGroup: "Agendas",
+      noEventsDay: "Aucun événement ce jour.",
+      close: "Fermer",
+      description: "Description"
+    },
+    en: {
+      months: [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ],
+      monthsShort: [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ],
+      daysShort: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+      dayInitials: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+      today: "Today",
+      monthView: "Month",
+      weekView: "Week",
+      mainMenu: "Main menu",
+      prevPeriod: "Previous period",
+      nextPeriod: "Next period",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
+      classicMonthView: "Classic month view",
+      centerMonthView: "Center month view on current week",
+      switchToLight: "Switch to light mode",
+      switchToDark: "Switch to dark mode",
+      enterFullscreen: "Enter fullscreen",
+      exitFullscreen: "Exit fullscreen",
+      allDay: "All day",
+      allDayHeader: "All-day",
+      moreEvents: "more",
+      untitled: "Untitled",
+      defaultGroup: "Calendars",
+      noEventsDay: "No events this day.",
+      close: "Close",
+      description: "Description"
+    }
+  };
+
   const HOUR_HEIGHT = 48;
 
   const SUN_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
@@ -76,6 +137,25 @@
       this._themeObserver = null;
       this._mediaQueryListener = null;
       this._mediaQuery = null;
+    }
+
+    get lang() {
+      if (this.config && this.config.language && this.config.language !== 'auto') {
+        const custom = String(this.config.language).toLowerCase();
+        return custom.startsWith('fr') ? 'fr' : 'en';
+      }
+      const haLang = (this._hass && (this._hass.language || (this._hass.locale && this._hass.locale.language))) ||
+                     (navigator.language || 'en');
+      return haLang.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    }
+
+    get locale() {
+      return this.lang === 'fr' ? 'fr-FR' : 'en-US';
+    }
+
+    t(key) {
+      const l = this.lang;
+      return (I18N[l] && I18N[l][key] !== undefined) ? I18N[l][key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
     }
 
     get isDarkTheme() {
@@ -237,6 +317,7 @@
 
     setConfig(config) {
       this.config = Object.assign({
+        language: 'auto',
         theme_mode: 'auto',
         fullscreen: false,
         fit_screen: true,
@@ -302,14 +383,20 @@
 
     set hass(hass) {
       const wasDark = this._lastIsDark;
+      const prevLang = this._lastLang;
       this._hass = hass;
       const nowDark = this.isDarkTheme;
+      const currentLang = this.lang;
       this._lastIsDark = nowDark;
+      this._lastLang = currentLang;
 
       if (!this._initialFetched && this.config) {
         this._initialFetched = true;
         this.fetchEvents();
-      } else if (this.themeMode === 'auto' && wasDark !== undefined && wasDark !== nowDark) {
+      } else if (
+        (this.themeMode === 'auto' && wasDark !== undefined && wasDark !== nowDark) ||
+        (prevLang !== undefined && prevLang !== currentLang)
+      ) {
         this.render();
       }
     }
@@ -513,6 +600,8 @@
 
     getHeaderTitle() {
       const y = this.currentDate.getFullYear();
+      const months = this.t('months');
+      const monthsShort = this.t('monthsShort');
       if (this.viewMode === 'month') {
         if (this.isCenteredMonth) {
           const dayOfWeek = (this.currentDate.getDay() + 6) % 7;
@@ -520,13 +609,13 @@
           anchorMonday.setDate(this.currentDate.getDate() - dayOfWeek);
           const midWeek = new Date(anchorMonday);
           midWeek.setDate(anchorMonday.getDate() + 3);
-          return `${MONTH_NAMES[midWeek.getMonth()]} ${midWeek.getFullYear()}`;
+          return `${months[midWeek.getMonth()]} ${midWeek.getFullYear()}`;
         }
-        return `${MONTH_NAMES[this.currentDate.getMonth()]} ${y}`;
+        return `${months[this.currentDate.getMonth()]} ${y}`;
       } else {
         const { start, end } = this.getStartEndRange();
-        const mStart = MONTH_SHORT[start.getMonth()];
-        const mEnd = MONTH_SHORT[end.getMonth()];
+        const mStart = monthsShort[start.getMonth()];
+        const mEnd = monthsShort[end.getMonth()];
         if (start.getMonth() === end.getMonth()) {
           return `${start.getDate()} – ${end.getDate()} ${mStart} ${y}`;
         } else {
@@ -607,9 +696,15 @@
         weeks.push(weekDays);
       }
 
+      const daysShort = this.t('daysShort');
+      const monthsShort = this.t('monthsShort');
+      const untitledText = this.t('untitled');
+      const moreText = this.t('moreEvents');
+      const locale = this.locale;
+
       let html = `<div class="month-grid">
         <div class="day-headers">
-          ${DAY_NAMES_SHORT.map(h => `<div class="day-header-cell">${h}</div>`).join('')}
+          ${daysShort.map(h => `<div class="day-header-cell">${h}</div>`).join('')}
         </div>
         <div class="month-weeks">`;
 
@@ -732,7 +827,7 @@
               const isToday = dStr === todayStr;
               return `<div class="day-cell-bg ${isOther ? 'other-month' : ''} ${isToday ? 'today-cell' : ''}" data-day="${dStr}">
                 <div class="cell-top">
-                  <span class="day-number ${isToday ? 'today-badge' : ''}">${d.getDate()}${d.getDate() === 1 ? ' ' + MONTH_SHORT[d.getMonth()] : ''}</span>
+                  <span class="day-number ${isToday ? 'today-badge' : ''}">${d.getDate()}${d.getDate() === 1 ? ' ' + monthsShort[d.getMonth()] : ''}</span>
                 </div>
               </div>`;
             }).join('')}
@@ -742,7 +837,7 @@
           <div class="week-events-grid">
             ${visibleItems.map(item => {
               const { ev, isBar, startCol, colSpan, slot, isCapLeft, isCapRight } = item;
-              const safeSummary = escapeHtml(ev.summary || 'Sans titre');
+              const safeSummary = escapeHtml(ev.summary || untitledText);
               const gridColStyle = `grid-column: ${startCol} / span ${colSpan}; grid-row: ${slot + 1};`;
 
               if (isBar) {
@@ -756,7 +851,7 @@
                   <span class="bar-title">${safeSummary}</span>
                 </div>`;
               } else {
-                const timeStr = ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+                const timeStr = ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : '';
                 return `<div class="gcal-chip" style="${gridColStyle}" data-uid="${ev._uid}" title="${safeSummary}">
                   <span class="chip-bullet" style="background:${ev.color}"></span>
                   ${timeStr ? `<span class="chip-time">${timeStr}</span>` : ''}
@@ -772,7 +867,7 @@
               if (count <= 0) return '';
               const dStr = formatLocalDate(d);
               return `<div class="more-pill" style="grid-column: ${col} / span 1; grid-row: ${MAX_VISIBLE_SLOTS + 1};" data-day="${dStr}">
-                +${count} en plus
+                +${count} ${moreText}
               </div>`;
             }).join('')}
           </div>
@@ -867,7 +962,7 @@
               const dateStr = formatLocalDate(d);
               const isToday = dateStr === todayStr;
               return `<div class="week-day-header ${isToday ? 'today-col' : ''}">
-                <div class="w-day-name ${isToday ? 'today-text' : ''}">${DAY_NAMES_SHORT[i]}</div>
+                <div class="w-day-name ${isToday ? 'today-text' : ''}">${this.t('daysShort')[i]}</div>
                 <div class="w-day-num ${isToday ? 'today-badge' : ''}">${d.getDate()}</div>
               </div>`;
             }).join('')}
@@ -877,12 +972,12 @@
         <!-- All Day Events Row -->
         ${hasAnyAllDay ? `
           <div class="week-all-day-row">
-            <div class="time-col-header" style="font-size: 0.68rem; color: var(--gc-text-muted); padding-right: 4px; text-align: right;">Journée</div>
+            <div class="time-col-header" style="font-size: 0.68rem; color: var(--gc-text-muted); padding-right: 4px; text-align: right;">${this.t('allDayHeader')}</div>
             <div class="week-all-day-cells">
               ${days.map((d, i) => `
                 <div class="all-day-day-cell">
                   ${allDayEventsByDay[i].map(ev => {
-                    const safeSummary = escapeHtml(ev.summary || 'Sans titre');
+                    const safeSummary = escapeHtml(ev.summary || this.t('untitled'));
                     const isBright = ev.color === '#d8be5e' || ev.color === '#fbbc04';
                     const textColor = isBright ? '#1f1f20' : '#ffffff';
                     return `
@@ -930,8 +1025,8 @@
 
                   const colWidth = 100 / totalCols;
                   const leftPercent = colIndex * colWidth;
-                  const safeSummary = escapeHtml(ev.summary || 'Sans titre');
-                  const timeStr = `${s.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${e.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                  const safeSummary = escapeHtml(ev.summary || this.t('untitled'));
+                  const timeStr = `${s.toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' })} - ${e.toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' })}`;
                   const isCompact = height < 32;
                   const isBright = ev.color === '#d8be5e' || ev.color === '#fbbc04';
                   const textColor = isBright ? '#1f1f20' : '#ffffff';
@@ -968,17 +1063,20 @@
         curr.setDate(curr.getDate() + 1);
       }
 
+      const months = this.t('months');
+      const dayInitials = this.t('dayInitials');
+
       return `
         <div class="mini-cal">
           <div class="mini-cal-header">
-            <span class="mini-cal-title">${MONTH_NAMES[m]} ${y}</span>
+            <span class="mini-cal-title">${months[m]} ${y}</span>
             <div class="mini-nav">
-              <button class="mini-nav-btn mini-prev" title="Mois précédent">&#10094;</button>
-              <button class="mini-nav-btn mini-next" title="Mois suivant">&#10095;</button>
+              <button class="mini-nav-btn mini-prev" title="${this.t('prevMonth')}">&#10094;</button>
+              <button class="mini-nav-btn mini-next" title="${this.t('nextMonth')}">&#10095;</button>
             </div>
           </div>
           <div class="mini-day-headers">
-            ${DAY_INITIALS.map(d => `<span>${d}</span>`).join('')}
+            ${dayInitials.map(d => `<span>${d}</span>`).join('')}
           </div>
           <div class="mini-days-grid">
             ${days.map(d => {
@@ -997,8 +1095,9 @@
 
     renderSidebar() {
       const groups = {};
+      const defaultGroup = this.t('defaultGroup');
       this.config.calendars.forEach(c => {
-        const g = c.group || 'Agendas';
+        const g = c.group || defaultGroup;
         if (!groups[g]) groups[g] = [];
         groups[g].push(c);
       });
@@ -1088,8 +1187,12 @@
       const dayStr = this.dayModalDate;
       const rawDayEvents = this.events.filter(ev => this.isEventOnDay(ev, dayStr));
       const dayEvents = this.sortEventsForDay(rawDayEvents, dayStr);
-      const formattedDate = dayDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const formattedDate = dayDate.toLocaleDateString(this.locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       const themeClass = this.isDarkTheme ? 'dark-theme' : 'light-theme';
+      const noEventsText = this.t('noEventsDay');
+      const allDayText = this.t('allDay');
+      const untitledText = this.t('untitled');
+      const closeText = this.t('close');
 
       return `
         <div class="modal-backdrop modal-day-backdrop ${themeClass}">
@@ -1098,10 +1201,10 @@
               📅 ${escapeHtml(formattedDate)}
             </div>
             <div class="day-modal-events-list">
-              ${dayEvents.length === 0 ? `<div style="color: var(--gc-text-muted); padding: 12px 0;">Aucun événement ce jour.</div>` : dayEvents.map(ev => {
+              ${dayEvents.length === 0 ? `<div style="color: var(--gc-text-muted); padding: 12px 0;">${noEventsText}</div>` : dayEvents.map(ev => {
                 const isAllDay = !ev.start.dateTime;
-                const timeStr = isAllDay ? 'Toute la journée' : `${new Date(ev.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${new Date(ev.end?.dateTime || ev.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-                const safeSummary = escapeHtml(ev.summary || 'Sans titre');
+                const timeStr = isAllDay ? allDayText : `${new Date(ev.start.dateTime).toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' })} - ${new Date(ev.end?.dateTime || ev.start.dateTime).toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' })}`;
+                const safeSummary = escapeHtml(ev.summary || untitledText);
                 const safeCalName = escapeHtml(ev.calendarName);
                 return `
                   <div class="day-modal-event-item" data-uid="${ev._uid}" style="border-left: 4px solid ${ev.color};">
@@ -1111,7 +1214,7 @@
                 `;
               }).join('')}
             </div>
-            <button class="modal-close-btn modal-day-close-btn">Fermer</button>
+            <button class="modal-close-btn modal-day-close-btn">${closeText}</button>
           </div>
         </div>
       `;
@@ -2286,33 +2389,33 @@
           <!-- Top Google Agenda Navigation Bar -->
           <div class="gcal-header">
             <div class="header-left">
-              <button class="btn-toggle-sidebar" title="Menu principal">☰</button>
+              <button class="btn-toggle-sidebar" title="${this.t('mainMenu')}">☰</button>
               <div class="brand-badge">
                 <div class="app-icon">${today.getDate()}</div>
                 <div class="app-title">Agenda</div>
               </div>
-              <button class="btn-today">Aujourd'hui</button>
+              <button class="btn-today">${this.t('today')}</button>
               <div class="nav-arrows">
-                <button class="btn-nav btn-prev" title="Période précédente">❮</button>
-                <button class="btn-nav btn-next" title="Période suivante">❯</button>
+                <button class="btn-nav btn-prev" title="${this.t('prevPeriod')}">❮</button>
+                <button class="btn-nav btn-next" title="${this.t('nextPeriod')}">❯</button>
               </div>
               <div class="period-title">${title}</div>
             </div>
             <div class="header-right">
               <div class="view-switcher">
-                <button class="view-btn ${this.viewMode === 'month' ? 'active' : ''}" data-view="month">Mois</button>
-                <button class="view-btn ${this.viewMode === 'week' ? 'active' : ''}" data-view="week">Semaine</button>
+                <button class="view-btn ${this.viewMode === 'month' ? 'active' : ''}" data-view="month">${this.t('monthView')}</button>
+                <button class="view-btn ${this.viewMode === 'week' ? 'active' : ''}" data-view="week">${this.t('weekView')}</button>
               </div>
               ${this.viewMode === 'month' ? `
-                <button class="btn-center-toggle ${this.isCenteredMonth ? 'active' : ''}" id="centerToggleBtn" title="${this.isCenteredMonth ? 'Vue mois classique' : 'Centrer la vue du mois sur la semaine actuelle'}">
+                <button class="btn-center-toggle ${this.isCenteredMonth ? 'active' : ''}" id="centerToggleBtn" title="${this.isCenteredMonth ? this.t('classicMonthView') : this.t('centerMonthView')}">
                   ${CENTER_SVG}
                 </button>
               ` : ''}
-              <button class="btn-theme-toggle" title="${isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}">
+              <button class="btn-theme-toggle" title="${isDark ? this.t('switchToLight') : this.t('switchToDark')}">
                 ${isDark ? SUN_SVG : MOON_SVG}
               </button>
               ${this.showFullscreenButton ? `
-                <button class="btn-fullscreen-toggle" title="${this.isFullscreen ? 'Quitter le plein écran' : 'Passer en plein écran'}">
+                <button class="btn-fullscreen-toggle" title="${this.isFullscreen ? this.t('exitFullscreen') : this.t('enterFullscreen')}">
                   ${this.isFullscreen ? COMPRESS_SVG : EXPAND_SVG}
                 </button>
               ` : ''}
@@ -2334,11 +2437,11 @@
             <div class="modal-content">
               <div class="modal-title">
                 <span class="modal-cal-dot" style="background:${this.selectedEvent.color}"></span>
-                <span>${escapeHtml(this.selectedEvent.summary || 'Sans titre')}</span>
+                <span>${escapeHtml(this.selectedEvent.summary || this.t('untitled'))}</span>
               </div>
               <div class="modal-time">
-                <div>📅 ${new Date(this.selectedEvent.start.dateTime || this.selectedEvent.start.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                ${this.selectedEvent.start.dateTime ? `<div>⏱ ${new Date(this.selectedEvent.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${new Date(this.selectedEvent.end?.dateTime || this.selectedEvent.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>` : '<div>⏱ (Toute la journée)</div>'}
+                <div>📅 ${new Date(this.selectedEvent.start.dateTime || this.selectedEvent.start.date + 'T12:00:00').toLocaleDateString(this.locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                ${this.selectedEvent.start.dateTime ? `<div>⏱ ${new Date(this.selectedEvent.start.dateTime).toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' })} - ${new Date(this.selectedEvent.end?.dateTime || this.selectedEvent.start.dateTime).toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' })}</div>` : `<div>⏱ (${this.t('allDay')})</div>`}
               </div>
               <div>
                 <span class="modal-badge" style="background: ${this.selectedEvent.color}22; color: ${this.selectedEvent.color}; border: 1px solid ${this.selectedEvent.color}55;">
@@ -2348,11 +2451,11 @@
               ${this.selectedEvent.location ? `<div class="modal-meta-row">📍 <span>${escapeHtml(this.selectedEvent.location)}</span></div>` : ''}
               ${this.selectedEvent.description ? `
                 <div class="modal-desc-container">
-                  <div class="modal-desc-label">Description</div>
+                  <div class="modal-desc-label">${this.t('description')}</div>
                   <div class="modal-desc">${formatDescription(this.selectedEvent.description)}</div>
                 </div>
               ` : ''}
-              <button class="modal-close-btn modal-event-close-btn">Fermer</button>
+              <button class="modal-close-btn modal-event-close-btn">${this.t('close')}</button>
             </div>
           </div>
         ` : ''}
