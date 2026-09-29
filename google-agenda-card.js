@@ -158,6 +158,47 @@
       return (I18N[l] && I18N[l][key] !== undefined) ? I18N[l][key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
     }
 
+    get firstDayOfWeek() {
+      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday. Default is 1 (Monday).
+      const raw = this.config ? (this.config.first_day_of_week ?? this.config.first_day ?? this.config.start_day) : undefined;
+      if (raw !== undefined && raw !== null) {
+        if (typeof raw === 'number') {
+          return ((raw % 7) + 7) % 7;
+        }
+        const str = String(raw).trim().toLowerCase();
+        const map = {
+          '0': 0, 'sun': 0, 'sunday': 0, 'dim': 0, 'dimanche': 0,
+          '1': 1, 'mon': 1, 'monday': 1, 'lun': 1, 'lundi': 1,
+          '2': 2, 'tue': 2, 'tuesday': 2, 'mar': 2, 'mardi': 2,
+          '3': 3, 'wed': 3, 'wednesday': 3, 'mer': 3, 'mercredi': 3,
+          '4': 4, 'thu': 4, 'thursday': 4, 'jeu': 4, 'jeudi': 4,
+          '5': 5, 'fri': 5, 'friday': 5, 'ven': 5, 'vendredi': 5,
+          '6': 6, 'sat': 6, 'saturday': 6, 'sam': 6, 'samedi': 6
+        };
+        if (map[str] !== undefined) return map[str];
+        const parsed = parseInt(str, 10);
+        if (!isNaN(parsed)) return ((parsed % 7) + 7) % 7;
+      }
+      return 1; // Default Monday
+    }
+
+    getDayOffset(date) {
+      // Returns index 0..6 relative to configured firstDayOfWeek
+      return (date.getDay() - this.firstDayOfWeek + 7) % 7;
+    }
+
+    get daysShort() {
+      const base = this.t('daysShort'); // [Mon, Tue, Wed, Thu, Fri, Sat, Sun] (starts Monday)
+      const shift = (this.firstDayOfWeek - 1 + 7) % 7;
+      return base.slice(shift).concat(base.slice(0, shift));
+    }
+
+    get dayInitials() {
+      const base = this.t('dayInitials'); // [M, T, W, T, F, S, S] (starts Monday)
+      const shift = (this.firstDayOfWeek - 1 + 7) % 7;
+      return base.slice(shift).concat(base.slice(0, shift));
+    }
+
     get isDarkTheme() {
       if (this.themeMode === 'dark') return true;
       if (this.themeMode === 'light') return false;
@@ -318,6 +359,7 @@
     setConfig(config) {
       this.config = Object.assign({
         language: 'auto',
+        first_day_of_week: 1,
         theme_mode: 'auto',
         fullscreen: false,
         fit_screen: true,
@@ -409,32 +451,32 @@
       if (this.viewMode === 'month') {
         if (this.isCenteredMonth) {
           // Centered Month View: 5 weeks total, row 3 (middle row) is the current anchor week!
-          const dayOfWeek = (this.currentDate.getDay() + 6) % 7; // Monday = 0
-          const anchorMonday = new Date(this.currentDate);
-          anchorMonday.setDate(this.currentDate.getDate() - dayOfWeek);
-          anchorMonday.setHours(0, 0, 0, 0);
+          const dayOffset = this.getDayOffset(this.currentDate);
+          const anchorStart = new Date(this.currentDate);
+          anchorStart.setDate(this.currentDate.getDate() - dayOffset);
+          anchorStart.setHours(0, 0, 0, 0);
 
-          // 2 weeks before anchor Monday
-          start = new Date(anchorMonday);
-          start.setDate(anchorMonday.getDate() - 14);
+          // 2 weeks before anchor start day
+          start = new Date(anchorStart);
+          start.setDate(anchorStart.getDate() - 14);
 
-          // 2 weeks after anchor Monday (+14 days to week 5 Monday, +6 days to Sunday = +20 days)
-          end = new Date(anchorMonday);
-          end.setDate(anchorMonday.getDate() + 20);
+          // 2 weeks after anchor start day (+14 days to week 5 start, +6 days to end of week = +20 days)
+          end = new Date(anchorStart);
+          end.setDate(anchorStart.getDate() + 20);
           end.setHours(23, 59, 59, 999);
         } else {
           const firstOfMonth = new Date(y, m, 1);
-          const dayOfWeek = (firstOfMonth.getDay() + 6) % 7; // Monday = 0
-          start = new Date(y, m, 1 - dayOfWeek, 0, 0, 0);
+          const dayOffset = this.getDayOffset(firstOfMonth);
+          start = new Date(y, m, 1 - dayOffset, 0, 0, 0);
 
           const lastOfMonth = new Date(y, m + 1, 0);
-          const endDayOfWeek = (lastOfMonth.getDay() + 6) % 7;
-          end = new Date(y, m + 1, 6 - endDayOfWeek, 23, 59, 59);
+          const endDayOffset = this.getDayOffset(lastOfMonth);
+          end = new Date(y, m + 1, 6 - endDayOffset, 23, 59, 59);
         }
       } else {
-        const dayOfWeek = (this.currentDate.getDay() + 6) % 7; // Monday = 0
+        const dayOffset = this.getDayOffset(this.currentDate);
         start = new Date(this.currentDate);
-        start.setDate(this.currentDate.getDate() - dayOfWeek);
+        start.setDate(this.currentDate.getDate() - dayOffset);
         start.setHours(0, 0, 0, 0);
 
         end = new Date(start);
@@ -604,11 +646,11 @@
       const monthsShort = this.t('monthsShort');
       if (this.viewMode === 'month') {
         if (this.isCenteredMonth) {
-          const dayOfWeek = (this.currentDate.getDay() + 6) % 7;
-          const anchorMonday = new Date(this.currentDate);
-          anchorMonday.setDate(this.currentDate.getDate() - dayOfWeek);
-          const midWeek = new Date(anchorMonday);
-          midWeek.setDate(anchorMonday.getDate() + 3);
+          const dayOffset = this.getDayOffset(this.currentDate);
+          const anchorStart = new Date(this.currentDate);
+          anchorStart.setDate(this.currentDate.getDate() - dayOffset);
+          const midWeek = new Date(anchorStart);
+          midWeek.setDate(anchorStart.getDate() + 3);
           return `${months[midWeek.getMonth()]} ${midWeek.getFullYear()}`;
         }
         return `${months[this.currentDate.getMonth()]} ${y}`;
@@ -676,15 +718,15 @@
       const today = new Date();
       const todayStr = formatLocalDate(today);
       const targetMonth = this.isCenteredMonth ? (() => {
-        const dayOfWeek = (this.currentDate.getDay() + 6) % 7;
-        const anchorMonday = new Date(this.currentDate);
-        anchorMonday.setDate(this.currentDate.getDate() - dayOfWeek);
-        const midWeek = new Date(anchorMonday);
-        midWeek.setDate(anchorMonday.getDate() + 3);
+        const dayOffset = this.getDayOffset(this.currentDate);
+        const anchorStart = new Date(this.currentDate);
+        anchorStart.setDate(this.currentDate.getDate() - dayOffset);
+        const midWeek = new Date(anchorStart);
+        midWeek.setDate(anchorStart.getDate() + 3);
         return midWeek.getMonth();
       })() : this.currentDate.getMonth();
 
-      // Divide days into weeks (Mon..Sun)
+      // Divide days into weeks
       const weeks = [];
       let curr = new Date(start);
       while (curr <= end) {
@@ -696,7 +738,7 @@
         weeks.push(weekDays);
       }
 
-      const daysShort = this.t('daysShort');
+      const daysShort = this.daysShort;
       const monthsShort = this.t('monthsShort');
       const untitledText = this.t('untitled');
       const moreText = this.t('moreEvents');
@@ -962,7 +1004,7 @@
               const dateStr = formatLocalDate(d);
               const isToday = dateStr === todayStr;
               return `<div class="week-day-header ${isToday ? 'today-col' : ''}">
-                <div class="w-day-name ${isToday ? 'today-text' : ''}">${this.t('daysShort')[i]}</div>
+                <div class="w-day-name ${isToday ? 'today-text' : ''}">${this.daysShort[i]}</div>
                 <div class="w-day-num ${isToday ? 'today-badge' : ''}">${d.getDate()}</div>
               </div>`;
             }).join('')}
@@ -1053,8 +1095,8 @@
       const currStr = formatLocalDate(this.currentDate);
 
       const firstOfMonth = new Date(y, m, 1);
-      const dayOfWeek = (firstOfMonth.getDay() + 6) % 7;
-      const start = new Date(y, m, 1 - dayOfWeek);
+      const dayOffset = this.getDayOffset(firstOfMonth);
+      const start = new Date(y, m, 1 - dayOffset);
 
       const days = [];
       const curr = new Date(start);
@@ -1064,7 +1106,7 @@
       }
 
       const months = this.t('months');
-      const dayInitials = this.t('dayInitials');
+      const dayInitials = this.dayInitials;
 
       return `
         <div class="mini-cal">
