@@ -1,0 +1,19 @@
+{
+  "name": "ha-google-agenda-card",
+  "version": "1.0.0",
+  "description": "Interface Google Agenda / Google Calendar complète et responsive pour Home Assistant",
+  "main": "google-agenda-card.js",
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hacs",
+    "custom-card",
+    "lovelace",
+    "calendar",
+    "google-calendar",
+    "google-agenda",
+    "mealie"
+  ],
+  "author": "Blackbol",
+  "license": "MIT"
+}
