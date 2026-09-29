@@ -8,6 +8,26 @@ Une carte Lovelace personnalisée pour **Home Assistant** offrant l'interface co
 
 ---
 
+## 📸 Aperçu
+
+### Vue Mois (Mode Sombre)
+*Barres multi-jours continues, pastilles colorées par calendrier, puces `+X en plus` et barre latérale rétractable.*
+![Vue Mois en mode sombre](images/month-view-dark.png)
+
+### Vue Semaine (Grille horaire 24h)
+*Vue détaillée heure par heure avec repère d'heure actuelle et événements multi-jours en en-tête.*
+![Vue Semaine avec grille horaire 24h](images/week-view-dark.png)
+
+### Vue Mois (Mode Clair)
+*Prise en charge native du thème clair de Home Assistant avec contrastes optimisés.*
+![Vue Mois en mode clair](images/month-view-light.png)
+
+### Fiche Détail d'un Événement (Modale)
+*Consultation des détails (horaires, calendrier source, localisation et description).*
+![Fiche détail d'un événement](images/event-modal.png)
+
+---
+
 ## ✨ Fonctionnalités clés
 
 - 🗓️ **Expérience Google Calendar authentique** : Vue Mois et vue Semaine (24h) avec début de semaine le **Lundi**.
@@ -52,7 +72,7 @@ Une carte Lovelace personnalisée pour **Home Assistant** offrant l'interface co
 
 ## ⚙️ Configuration YAML
 
-### Exemple complet (avec Mealie et vue centrée)
+### Exemple complet (correspondant aux captures d'écran)
 
 ```yaml
 type: custom:google-agenda-card
@@ -64,38 +84,32 @@ show_fullscreen_button: true
 calendars:
   - id: calendar.personnel
     name: Personnel
-    color: '#668be1'
-    group: Mes agendas
-    default: true
-
-  - id: calendar.travail
-    name: Travail
     color: '#4285f4'
     group: Mes agendas
     default: true
 
-  - id: calendar.famille
-    name: Famille
-    color: '#e3683e'
+  - id: calendar.travail_projets
+    name: Projets & Travail
+    color: '#0f9d58'
     group: Mes agendas
     default: true
 
-  - id: calendar.anniversaires
-    name: Anniversaires
-    color: '#d8be5e'
-    group: Autres agendas
+  - id: calendar.loisirs_sorties
+    name: Loisirs & Sorties
+    color: '#f4b400'
+    group: Mes agendas
     default: true
 
-  - id: calendar.jours_feries_en_france
-    name: Jours fériés
-    color: '#489160'
-    group: Autres agendas
+  - id: calendar.famille_maison
+    name: Famille & Maison
+    color: '#db4437'
+    group: Mes agendas
     default: true
 
   # Optionnel : repas Mealie avec heures fixes automatiques
   - id: calendar.mealie_dejeuner
     name: Déjeuner
-    color: '#4fa89b'
+    color: '#00acc1'
     group: Repas (Mealie)
     fixed_time: '12:00'
     duration_minutes: 45
